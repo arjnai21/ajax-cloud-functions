@@ -2,6 +2,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { executeSql } from "./mysql";
+import {app} from "./onRequest";
 
 // // Start writing Firebase Functions
 // // https://firebase.google.com/docs/functions/typescript
@@ -33,23 +34,23 @@ export const createUser = functions.auth.user().onCreate((user) => {
 // instead of promises. Yes, I know there are libraries that make it work
 // with promises but no, I don't want to use them. Simply because
 // I don't just trust libraries that easily
+// TODO figure out how to authenticate this
 export const getUser = functions.https.onRequest((req, res) => {
     const sql = "SELECT * FROM User WHERE id=?";
     const values = [req.body.uid];
-    return executeSql(sql, values, (success, results, fields) => {
+    executeSql(sql, values, (success, results, fields) => {
         functions.logger.info("ENTIRE CREATE USER FUNCTION COMPLETED");
         console.assert(results.length == 1);
         res.send(results[0]);
     });
 });
 
-
-export const makePayment = functions.https.onRequest(async (req, res) => {
+export const makePayment = functions.https.onCall(async (data) => {
     const db = admin.firestore();
-    const message = req.body.message;
-    const amount = req.body.amount;
-    const senderUid = req.body.senderUid;
-    const recipientEmail = req.body.recipientEmail;
+    const message = data.message;
+    const amount = data.amount;
+    const senderUid = data.senderUid;
+    const recipientEmail = data.recipientEmail;
     if (amount <= 0) {
         console.log(amount);
         throw new Error("Amount must be greater than 0");
@@ -91,6 +92,11 @@ export const makePayment = functions.https.onRequest(async (req, res) => {
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
     });
 
+    return batch.commit().then(() => {
+        return {
+            success: "true",
+        };
+    });
     // const recipientDoc = db.collection("User").doc(senderUid);
 
     // batch.update(recipientDoc, {
@@ -103,3 +109,5 @@ export const makePayment = functions.https.onRequest(async (req, res) => {
 
     // return ["Apple", "Banana", "Cherry", "Date", "Fig", "Grapes"];
 });
+
+export const onRequest = app;
