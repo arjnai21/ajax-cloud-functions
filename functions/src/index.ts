@@ -26,26 +26,6 @@ export const createUser = functions.auth.user().onCreate((user) => {
     executeSql(insertSql, values, (success, results, fields) => {
         functions.logger.info("ENTIRE CREATE USER FUNCTION COMPLETED");
     });
-    // connection.end();
-
-    //     connection;
-    //     const db = admin.firestore();
-    //     db.collection("User").doc(user.uid).set({
-    //         uid: user.uid,
-    //         displayName: user.displayName,
-    //         email: user.email,
-    //         phoneNumber: user.phoneNumber,
-    //         passwordHash: user.passwordHash,
-    //         photoURL: user.photoURL,
-    //         emailVerified: user.emailVerified,
-    //         metadata: JSON.stringify(user.metadata),
-    //         balance: 0.0,
-    //         friends: [],
-    //     }).then(() => {
-    //         functions.logger.info("Created new user document");
-    //     }).catch((error) => {
-    //         functions.logger.error("Error creating user: ", error);
-    //     });
 });
 
 export const makePayment = functions.https.onCall(async (data) => {
