@@ -1,7 +1,7 @@
 /* eslint-disable max-len */
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import * as connection from "./mysql";
+import { executeSql } from "./mysql";
 
 // // Start writing Firebase Functions
 // // https://firebase.google.com/docs/functions/typescript
@@ -14,25 +14,38 @@ admin.initializeApp();
 // });
 
 
-export const createUserDocument = functions.auth.user().onCreate((user) => {
-    connection;
-    const db = admin.firestore();
-    db.collection("User").doc(user.uid).set({
-        uid: user.uid,
-        displayName: user.displayName,
-        email: user.email,
-        phoneNumber: user.phoneNumber,
-        passwordHash: user.passwordHash,
-        photoURL: user.photoURL,
-        emailVerified: user.emailVerified,
-        metadata: JSON.stringify(user.metadata),
-        balance: 0.0,
-        friends: [],
-    }).then(() => {
-        functions.logger.info("Created new user document");
-    }).catch((error) => {
-        functions.logger.error("Error creating user: ", error);
+export const createUser = functions.auth.user().onCreate((user) => {
+    const insertSql = `INSERT INTO User (id, display_name, email, creation_time, password_hash, email_verified, phone_number, photo_url, balance)
+                        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    if (!user.displayName) {
+        user.displayName = user.email;
+    }
+    const values = [user.uid, user.displayName, user.email, user.metadata.creationTime, user.passwordHash,
+        user.emailVerified, user.phoneNumber, user.photoURL, 0];
+
+    executeSql(insertSql, values, (success, results, fields) => {
+        functions.logger.info("ENTIRE CREATE USER FUNCTION COMPLETED");
     });
+    // connection.end();
+
+    //     connection;
+    //     const db = admin.firestore();
+    //     db.collection("User").doc(user.uid).set({
+    //         uid: user.uid,
+    //         displayName: user.displayName,
+    //         email: user.email,
+    //         phoneNumber: user.phoneNumber,
+    //         passwordHash: user.passwordHash,
+    //         photoURL: user.photoURL,
+    //         emailVerified: user.emailVerified,
+    //         metadata: JSON.stringify(user.metadata),
+    //         balance: 0.0,
+    //         friends: [],
+    //     }).then(() => {
+    //         functions.logger.info("Created new user document");
+    //     }).catch((error) => {
+    //         functions.logger.error("Error creating user: ", error);
+    //     });
 });
 
 export const makePayment = functions.https.onCall(async (data) => {

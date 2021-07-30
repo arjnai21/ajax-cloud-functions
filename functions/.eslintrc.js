@@ -29,5 +29,6 @@ module.exports = {
         "quotes": ["error", "double"],
         "indent": [1, 4],
         "object-curly-spacing": 0,
+        "max-len": ["error", { "code": 130 }],
     },
 };
