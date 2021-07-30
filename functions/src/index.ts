@@ -28,19 +28,22 @@ export const createUser = functions.auth.user().onCreate((user) => {
     });
 });
 
-export const getUser = functions.https.onCall((data) => {
-    const sql = "SELECT * FROM User WHERE id=?";
-    const values = [data.uid];
-    return executeSql(sql, values, (success, results, fields) => {
-        functions.logger.info("ENTIRE CREATE USER FUNCTION COMPLETED");
-    });
-});
-
 // this has to be onRequest because for some godforsaken reason who ever
 // made the mysql node library decided to use regular ol callbacks
 // instead of promises. Yes, I know there are libraries that make it work
 // with promises but no, I don't want to use them. Simply because
-// I don't just libraries that easily
+// I don't just trust libraries that easily
+export const getUser = functions.https.onRequest((req, res) => {
+    const sql = "SELECT * FROM User WHERE id=?";
+    const values = [req.body.uid];
+    return executeSql(sql, values, (success, results, fields) => {
+        functions.logger.info("ENTIRE CREATE USER FUNCTION COMPLETED");
+        console.assert(results.length == 1);
+        res.send(results[0]);
+    });
+});
+
+
 export const makePayment = functions.https.onRequest(async (req, res) => {
     const db = admin.firestore();
     const message = req.body.message;
