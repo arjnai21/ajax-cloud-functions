@@ -77,6 +77,16 @@ app.post("/getUser", (req, res) => {
     // res.send(`Hello ${req.user.name}`);
 });
 
+app.post("/makePayment", (req, res) => {
+    const sql = "INSERT INTO Payment () VALUES ()";
+    const values = [req.body.uid];
+    executeSql(sql, values, (success, results, fields) => {
+        console.assert(results.length == 1);
+        res.json(results[0]);
+    });
+    // @ts-ignore
+    // res.send(`Hello ${req.user.name}`);
+});
 
 // This HTTPS endpoint can only be accessed by your Firebase Users.
 // Requests need to be authorized by providing an `Authorization` HTTP header
