@@ -28,12 +28,25 @@ export const createUser = functions.auth.user().onCreate((user) => {
     });
 });
 
-export const makePayment = functions.https.onCall(async (data) => {
+export const getUser = functions.https.onCall((data) => {
+    const sql = "SELECT * FROM User WHERE id=?";
+    const values = [data.uid];
+    return executeSql(sql, values, (success, results, fields) => {
+        functions.logger.info("ENTIRE CREATE USER FUNCTION COMPLETED");
+    });
+});
+
+// this has to be onRequest because for some godforsaken reason who ever
+// made the mysql node library decided to use regular ol callbacks
+// instead of promises. Yes, I know there are libraries that make it work
+// with promises but no, I don't want to use them. Simply because
+// I don't just libraries that easily
+export const makePayment = functions.https.onRequest(async (req, res) => {
     const db = admin.firestore();
-    const message = data.message;
-    const amount = data.amount;
-    const senderUid = data.senderUid;
-    const recipientEmail = data.recipientEmail;
+    const message = req.body.message;
+    const amount = req.body.amount;
+    const senderUid = req.body.senderUid;
+    const recipientEmail = req.body.recipientEmail;
     if (amount <= 0) {
         console.log(amount);
         throw new Error("Amount must be greater than 0");
@@ -75,11 +88,6 @@ export const makePayment = functions.https.onCall(async (data) => {
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    return batch.commit().then(() => {
-        return {
-            success: "true",
-        };
-    });
     // const recipientDoc = db.collection("User").doc(senderUid);
 
     // batch.update(recipientDoc, {
