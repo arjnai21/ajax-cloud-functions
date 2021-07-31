@@ -83,9 +83,11 @@ app.get("/getUser", (req, res) => {
 app.post("/makePayment", (req, res) => {
     makePaymentDb(req.body.senderId, req.body.recipientId, req.body.amount, req.body.message, function(success, results, fields) {
         if (success) {
-            res.send("successfully made payment");
+            res.json({success: true, message: "payment successful"});
+            functions.logger.info(results);
+            functions.logger.info(fields);
         } else {
-            res.send("unable to make payment");
+            res.json({sucess: false, message: "unable to make payment"});
         }
     });
     // @ts-ignore
