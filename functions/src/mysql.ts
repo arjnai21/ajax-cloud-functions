@@ -108,7 +108,7 @@ function makePaymentDb(senderId: string, recipientId: string, amount: number, me
                                         throw err;
                                     });
                                 }
-                                functions.logger.info("MADE COMPLETE PAYMENT TRANSACTION");
+                                // functions.logger.info("MADE COMPLETE PAYMENT TRANSACTION");
                                 callback(true, results, fields);
                                 connection.end();
                             });
