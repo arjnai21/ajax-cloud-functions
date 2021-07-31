@@ -6,7 +6,7 @@ import * as admin from "firebase-admin";
 import * as express from "express";
 import * as cookieParserLib from "cookie-parser";
 import * as corsLib from "cors";
-import { executeSql } from "./mysql";
+import { executeSql, makePaymentDb } from "./mysql";
 
 // admin.initializeApp();
 const cookieParser = cookieParserLib();
@@ -81,12 +81,12 @@ app.get("/getUser", (req, res) => {
 });
 
 app.post("/makePayment", (req, res) => {
-    const sql = "INSERT INTO Payment (id, amount, message, sender_id, recipient_id) VALUES (?, ?, ?, ?, ?)";
-    const id = "rgd";
-    const values = [id, req.body.amount, req.body.message, req.body.sender_id, req.body.recipient_id];
-    executeSql(sql, values, (success, results, fields) => {
-        console.assert(results.length == 1);
-        res.send("Success");
+    makePaymentDb(req.body.senderId, req.body.recipientId, req.body.amount, req.body.message, function(success, results, fields) {
+        if (success) {
+            res.send("successfully made payment");
+        } else {
+            res.send("unable to make payment");
+        }
     });
     // @ts-ignore
     // res.send(`Hello ${req.user.name}`);
