@@ -94,6 +94,16 @@ app.post("/makePayment", (req, res) => {
     // res.send(`Hello ${req.user.name}`);
 });
 
+app.get("/getPayments", (req, res) => {
+    const sql = "SELECT * from Payment WHERE sender_id=? or recipient_id=?";
+    const values = [req.user.uid, req.user.uid];
+
+    executeSql(sql, values, (success, results, fields) => {
+        console.assert(results.length == 1);
+        res.json({payments: results});
+    });
+});
+
 // This HTTPS endpoint can only be accessed by your Firebase Users.
 // Requests need to be authorized by providing an `Authorization` HTTP header
 // with value `Bearer <Firebase ID Token>`.
