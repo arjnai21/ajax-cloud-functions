@@ -31,7 +31,8 @@ export const createUser = functions.auth.user().onCreate((user) => {
 
 // this has to be onRequest because for some godforsaken reason who ever
 // made the mysql node library decided to use regular ol callbacks
-// instead of promises. Yes, I know there are libraries that make it work
+// instead of promises. and i need a reference to the response object.
+// Yes, I know there are libraries that make it work
 // with promises but no, I don't want to use them. Simply because
 // I don't just trust libraries that easily
 // TODO figure out how to authenticate this

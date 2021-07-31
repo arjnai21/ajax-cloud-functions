@@ -66,23 +66,27 @@ const validateFirebaseIdToken = async (req, res, next) => {
 app.use(cors);
 app.use(cookieParser);
 app.use(validateFirebaseIdToken);
-app.post("/getUser", (req, res) => {
+app.get("/getUser", (req, res) => {
     const sql = "SELECT * from User WHERE id=?";
-    const values = [req.body.uid];
+    const values = [req.user.uid];
+    functions.logger.info("LOGGING req.user");
+    // @ts-ignore
+    functions.logger.info(req.user);
+
     executeSql(sql, values, (success, results, fields) => {
         console.assert(results.length == 1);
         res.json(results[0]);
     });
-    // @ts-ignore
     // res.send(`Hello ${req.user.name}`);
 });
 
 app.post("/makePayment", (req, res) => {
-    const sql = "INSERT INTO Payment () VALUES ()";
-    const values = [req.body.uid];
+    const sql = "INSERT INTO Payment (id, amount, message, sender_id, recipient_id) VALUES (?, ?, ?, ?, ?)";
+    const id = "rgd";
+    const values = [id, req.body.amount, req.body.message, req.body.sender_id, req.body.recipient_id];
     executeSql(sql, values, (success, results, fields) => {
         console.assert(results.length == 1);
-        res.json(results[0]);
+        res.send("Success");
     });
     // @ts-ignore
     // res.send(`Hello ${req.user.name}`);
