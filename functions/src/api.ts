@@ -69,29 +69,21 @@ app.use(validateFirebaseIdToken);
 app.get("/getUser", (req, res) => {
     const sql = "SELECT * from User WHERE id=?";
     const values = [req.user.uid];
-    functions.logger.info("LOGGING req.user");
-    // @ts-ignore
-    functions.logger.info(req.user);
 
     executeSql(sql, values, (success, results, fields) => {
         console.assert(results.length == 1);
         res.json(results[0]);
     });
-    // res.send(`Hello ${req.user.name}`);
 });
 
 app.post("/makePayment", (req, res) => {
     makePaymentDb(req.body.senderId, req.body.recipientId, req.body.amount, req.body.message, function(success, results, fields) {
         if (success) {
             res.json({success: true, message: "payment successful"});
-            functions.logger.info(results);
-            functions.logger.info(fields);
         } else {
             res.json({sucess: false, message: "unable to make payment"});
         }
     });
-    // @ts-ignore
-    // res.send(`Hello ${req.user.name}`);
 });
 
 app.get("/getPayments", (req, res) => {
@@ -99,7 +91,7 @@ app.get("/getPayments", (req, res) => {
     const values = [req.user.uid, req.user.uid];
 
     executeSql(sql, values, (success, results, fields) => {
-        console.assert(results.length == 1);
+        // console.assert(results.length == 1);
         res.json({payments: results});
     });
 });
