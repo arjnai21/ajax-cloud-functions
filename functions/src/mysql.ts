@@ -1,4 +1,6 @@
 /* eslint-disable require-jsdoc */
+/* eslint-disable max-len */
+
 import * as mysql from "mysql";
 import * as functions from "firebase-functions";
 import {v4 as uuidv4} from "uuid";
@@ -54,7 +56,8 @@ function makePaymentDb(senderId: string, recipientEmail: string, amount: number,
         user: config.db.user,
         password: config.db.password,
         database: config.db.database,
-    });
+        multipleStatements: true,
+    },);
 
     connection.beginTransaction(function(err) {
         if (err) {
@@ -74,7 +77,13 @@ function makePaymentDb(senderId: string, recipientEmail: string, amount: number,
                 });
             }
             // next query here
-            connection.query("UPDATE User SET balance=balance+? WHERE email=?", [amount, recipientEmail],
+            //             SET @LastUpdateID := 0;
+            // UPDATE tbl SET Name = 'value_new',Rno = (SELECT @LastUpdateID := Rno)
+            //    WHERE Name = 'value3';
+            // SELECT @LastUpdateID AS LastUpdateID;
+            // update balance with email and get id back hopefully
+            connection.query("SET @recipient_id := 0; UPDATE User SET balance=balance+?, id = (SELECT @recipient_id := id) WHERE email = ?; SELECT @recipient_id AS recipient_id;",
+                [amount, recipientEmail],
                 function(error, results, fields) {
                     if (error) {
                         return connection.rollback(function() {
@@ -85,13 +94,14 @@ function makePaymentDb(senderId: string, recipientEmail: string, amount: number,
                             return;
                         });
                     }
-                    functions.logger.info("LOGGING RESULTS AND FIELDS AFTER UPDATING RECIPIENT BALANCE");
-                    functions.logger.info(results);
-                    functions.logger.info(fields);
+
                     const id = uuidv4();
+                    // third result because third statement, 0 because idk it's just in an array
+                    const recipientId = results[2][0].recipient_id;
+
                     // functions.logger.info("ID: " + id);
                     connection.query("INSERT INTO Payment (id, amount, message, sender_id, recipient_id) VALUES(?, ?, ?, ?, ?)",
-                        [id, amount, message, senderId, recipientEmail],
+                        [id, amount, message, senderId, recipientId],
                         function(error, results, fields) {
                             if (error) {
                                 return connection.rollback(function() {
