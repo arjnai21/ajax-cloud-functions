@@ -77,17 +77,18 @@ app.get("/getUser", (req, res) => {
 });
 
 app.post("/makePayment", (req, res) => {
-    makePaymentDb(req.body.senderId, req.body.recipientId, req.body.amount, req.body.message, function(success, results, fields) {
-        if (success) {
-            res.json({success: true, message: "payment successful"});
-        } else {
-            res.json({sucess: false, message: "unable to make payment"});
-        }
-    });
+    makePaymentDb(req.body.senderId, req.body.recipientEmail, req.body.amount, req.body.message,
+        function(success, results, fields) {
+            if (success) {
+                res.json({success: true, message: "payment successful"});
+            } else {
+                res.json({sucess: false, message: "unable to make payment"});
+            }
+        });
 });
 
 app.get("/getPayments", (req, res) => {
-    const sql = "SELECT * from Payment WHERE sender_id=? or recipient_id=?";
+    const sql = "SELECT * from Payment WHERE sender_id=? or recipient_id=? ORDER BY timestamp";
     const values = [req.user.uid, req.user.uid];
 
     executeSql(sql, values, (success, results, fields) => {

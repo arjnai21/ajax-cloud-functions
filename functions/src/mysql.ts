@@ -46,7 +46,7 @@ function executeSql(sql: string, values?: Array<any>, callback?: (success: boole
 
 // i should maybe call callback before i rollback
 // welcome to callback hell
-function makePaymentDb(senderId: string, recipientId: string, amount: number, message: string,
+function makePaymentDb(senderId: string, recipientEmail: string, amount: number, message: string,
     callback: (success: boolean, results: any, fields: any) => void) : void {
     const config = functions.config();
     const connection = mysql.createConnection({
@@ -74,7 +74,7 @@ function makePaymentDb(senderId: string, recipientId: string, amount: number, me
                 });
             }
             // next query here
-            connection.query("UPDATE User SET balance=balance+? WHERE id=?", [amount, recipientId],
+            connection.query("UPDATE User SET balance=balance+? WHERE email=?", [amount, recipientEmail],
                 function(error, results, fields) {
                     if (error) {
                         return connection.rollback(function() {
@@ -85,10 +85,13 @@ function makePaymentDb(senderId: string, recipientId: string, amount: number, me
                             return;
                         });
                     }
+                    functions.logger.info("LOGGING RESULTS AND FIELDS AFTER UPDATING RECIPIENT BALANCE");
+                    functions.logger.info(results);
+                    functions.logger.info(fields);
                     const id = uuidv4();
                     // functions.logger.info("ID: " + id);
                     connection.query("INSERT INTO Payment (id, amount, message, sender_id, recipient_id) VALUES(?, ?, ?, ?, ?)",
-                        [id, amount, message, senderId, recipientId],
+                        [id, amount, message, senderId, recipientEmail],
                         function(error, results, fields) {
                             if (error) {
                                 return connection.rollback(function() {
