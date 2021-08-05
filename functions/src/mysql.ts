@@ -6,21 +6,6 @@ import * as functions from "firebase-functions";
 import {v4 as uuidv4} from "uuid";
 
 
-// const connection = mysql.createConnection({
-//     host: config.db.host,
-//     user: config.db.user,
-//     password: config.db.password,
-//     database: config.db.database,
-// });
-
-// connection.connect((err) => {
-//     if (err) {
-//         console.error(err);
-//     }
-//     functions.logger.info("connected to db succesfully");
-//     console.log("Connected.");
-// });
-
 // maybe it's a bad to idea to connect to this thing every time. if so, let me know. thanks.
 function executeSql(sql: string, values?: Array<any>, callback?: (success: boolean, results: any, fields: any) => void) : void {
     const config = functions.config();
@@ -76,12 +61,7 @@ function makePaymentDb(senderId: string, recipientEmail: string, amount: number,
                     return;
                 });
             }
-            // next query here
-            //             SET @LastUpdateID := 0;
-            // UPDATE tbl SET Name = 'value_new',Rno = (SELECT @LastUpdateID := Rno)
-            //    WHERE Name = 'value3';
-            // SELECT @LastUpdateID AS LastUpdateID;
-            // update balance with email and get id back hopefully
+
             connection.query("SET @recipient_id := 0; UPDATE User SET balance=balance+?, id = (SELECT @recipient_id := id) WHERE email = ?; SELECT @recipient_id AS recipient_id;",
                 [amount, recipientEmail],
                 function(error, results, fields) {
