@@ -77,6 +77,9 @@ app.get("/getUser", (req, res) => {
 });
 
 app.post("/makePayment", (req, res) => {
+    if (req.body.amount <= 0) {
+        res.send("Cannot make payment with amount less than or equal to 0");
+    }
     makePaymentDb(req.body.senderId, req.body.recipientEmail, req.body.amount, req.body.message,
         function(success, results, fields) {
             if (success) {
