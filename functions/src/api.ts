@@ -78,15 +78,23 @@ app.get("/getUser", (req, res) => {
 
 app.post("/makePayment", (req, res) => {
     if (req.body.amount <= 0) {
-        res.send("Cannot make payment with amount less than or equal to 0");
+        res.json({success: false, message: "INVALID_AMOUNT"});
+        return;
     }
     makePaymentDb(req.body.senderId, req.body.recipientEmail, req.body.amount, req.body.message,
-        function(success, results, fields) {
-            if (success) {
-                res.json({success: true, message: "payment successful"});
+        function(message, results, fields) {
+            let successResp; let messageResp;
+            if (message == "SUCCESS") {
+                successResp = true;
+                messageResp = "SUCCESS";
+            } else if (message=="INSUFFICIENT_FUNDS") {
+                successResp = false;
+                messageResp = "INSUFFICIENT_FUNDS";
             } else {
-                res.json({sucess: false, message: "unable to make payment"});
+                successResp = false;
+                messageResp = "UNKNOWN_ERROR";
             }
+            res.json({success: successResp, message: messageResp});
         });
 });
 

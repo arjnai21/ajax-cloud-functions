@@ -35,9 +35,9 @@ function executeSql(sql: string, values?: Array<any>, callback?: (success: boole
 // welcome to callback hell
 // god the callbackness of this has become worse and worse, i might have to fix this at some point
 function makePaymentDb(senderId: string, recipientEmail: string, amount: number, message: string,
-    callback: (success: boolean, results: any, fields: any) => void) : void {
+    callback: (success: string, results: any, fields: any) => void) : void {
     if (amount <=0) {
-        callback(false, null, null);
+        callback("INVALID_AMOUNT", null, null);
         return;
     }
     const config = functions.config();
@@ -49,14 +49,16 @@ function makePaymentDb(senderId: string, recipientEmail: string, amount: number,
         multipleStatements: true,
     },);
 
-    getBalance(connection, senderId, function(balance, message) {
+    getBalance(connection, senderId, function(balance, response) {
         if (balance - amount < 0) {
-            if (message == "ERROR") {
+            if (response == "ERROR") {
                 functions.logger.error("ERROR QUERYING DB FOR BALANCE");
+                return;
                 //  maybe call the callback here?
             } else {
                 functions.logger.error("INSUFFICIENT FUNDS FOR PAYMENT");
-                callback(false, null, null);
+                callback("INSUFFICIENT_FUNDS", null, null);
+                return;
             }
         }
         functions.logger.info(balance);
@@ -74,7 +76,7 @@ function makePaymentDb(senderId: string, recipientEmail: string, amount: number,
                         console.error(error);
                         connection.end();
 
-                        callback(false, results, fields);
+                        callback("ERROR", results, fields);
                         return;
                     });
                 }
@@ -87,7 +89,7 @@ function makePaymentDb(senderId: string, recipientEmail: string, amount: number,
                                 console.error(error);
                                 connection.end();
 
-                                callback(false, results, fields);
+                                callback("ERROR", results, fields);
                                 return;
                             });
                         }
@@ -105,7 +107,7 @@ function makePaymentDb(senderId: string, recipientEmail: string, amount: number,
                                         connection.end();
 
                                         console.error(error);
-                                        callback(false, results, fields);
+                                        callback("ERROR", results, fields);
                                         return;
                                     });
                                 }
@@ -114,13 +116,14 @@ function makePaymentDb(senderId: string, recipientEmail: string, amount: number,
                                         return connection.rollback(function() {
                                             connection.end();
 
-                                            callback(false, results, fields);
+                                            callback("ERROR", results, fields);
                                             throw err;
                                         });
                                     }
                                     // functions.logger.info("MADE COMPLETE PAYMENT TRANSACTION");
-                                    callback(true, results, fields);
+                                    callback("SUCCESS", results, fields);
                                     connection.end();
+                                    return;
                                 });
                             });
                     });
@@ -138,7 +141,7 @@ function getBalance(connection: any, id: string, callback: (balance: number, mes
             functions.logger.error("unable to query db with query: ", sql, "and values:", values);
             throw new Error("Query failed");
             callback(-1, "ERROR");
-            return -1;
+            return;
             // if (callback) callback(false, results, fields);
         } else {
             functions.logger.info("succesfully performed get balance query: " + sql +
@@ -146,6 +149,7 @@ function getBalance(connection: any, id: string, callback: (balance: number, mes
             functions.logger.info(results);
             functions.logger.info(fields);
             callback(results[0].balance, "SUCCESS");
+            return;
             // return results[0].balance;
         }
         // connection.end();
