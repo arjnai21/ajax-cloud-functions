@@ -61,7 +61,6 @@ function makePaymentDb(senderId: string, recipientEmail: string, amount: number,
                 return;
             }
         }
-        functions.logger.info(balance);
 
         connection.beginTransaction(function(err) {
             if (err) {
@@ -87,6 +86,7 @@ function makePaymentDb(senderId: string, recipientEmail: string, amount: number,
                         if (error) {
                             return connection.rollback(function() {
                                 console.error(error);
+                                functions.logger.info(error);
                                 connection.end();
 
                                 callback("ERROR", results, fields);
@@ -105,6 +105,7 @@ function makePaymentDb(senderId: string, recipientEmail: string, amount: number,
                                 if (error) {
                                     return connection.rollback(function() {
                                         connection.end();
+                                        functions.logger.info(error);
 
                                         console.error(error);
                                         callback("ERROR", results, fields);
@@ -115,6 +116,7 @@ function makePaymentDb(senderId: string, recipientEmail: string, amount: number,
                                     if (err) {
                                         return connection.rollback(function() {
                                             connection.end();
+                                            functions.logger.info(error);
 
                                             callback("ERROR", results, fields);
                                             throw err;
@@ -146,8 +148,6 @@ function getBalance(connection: any, id: string, callback: (balance: number, mes
         } else {
             functions.logger.info("succesfully performed get balance query: " + sql +
                                             "\n with values: ", values);
-            functions.logger.info(results);
-            functions.logger.info(fields);
             callback(results[0].balance, "SUCCESS");
             return;
             // return results[0].balance;
