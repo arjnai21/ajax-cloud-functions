@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable max-len*/
 "use strict";
 
 import * as functions from "firebase-functions";
@@ -97,10 +98,24 @@ app.post("/makePayment", (req, res) => {
             res.json({success: successResp, message: messageResp});
         });
 });
-
+/*
+SELECT
+  Payment.amount, Payment.message, Payment.timestamp, RecipientUser.email AS recipient_email, SenderUser.email AS sender_email
+FROM Payment
+  INNER JOIN User RecipientUser ON Payment.recipient_id = RecipientUser.id
+  INNER JOIN User SenderUser ON Payment.sender_id = SenderUser.id
+  ORDER BY timestamp;
+*/
 // TODO figure out how to make a join on this to get the recicpient emails instead of uid
 app.get("/getPayments", (req, res) => {
-    const sql = "SELECT * from Payment WHERE sender_id=? or recipient_id=? ORDER BY timestamp";
+    const sql = `
+                SELECT
+                    Payment.amount, Payment.message, Payment.timestamp, RecipientUser.email AS recipient_email, SenderUser.email AS sender_email
+                FROM Payment
+                    INNER JOIN User RecipientUser ON Payment.recipient_id = RecipientUser.id
+                    INNER JOIN User SenderUser ON Payment.sender_id = SenderUser.id
+                WHERE (recipient_id=? OR sender_id=?)
+                    ORDER BY timestamp;`;
     const values = [req.user.uid, req.user.uid];
 
     executeSql(sql, values, (success, results, fields) => {
