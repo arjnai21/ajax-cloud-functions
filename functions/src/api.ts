@@ -106,7 +106,7 @@ FROM Payment
   INNER JOIN User SenderUser ON Payment.sender_id = SenderUser.id
   ORDER BY timestamp;
 */
-// TODO figure out how to make a join on this to get the recicpient emails instead of uid
+// TODO check if this is the right join
 app.get("/getPayments", (req, res) => {
     const sql = `
                 SELECT
@@ -115,7 +115,7 @@ app.get("/getPayments", (req, res) => {
                     INNER JOIN User RecipientUser ON Payment.recipient_id = RecipientUser.id
                     INNER JOIN User SenderUser ON Payment.sender_id = SenderUser.id
                 WHERE (recipient_id=? OR sender_id=?)
-                    ORDER BY timestamp;`;
+                    ORDER BY timestamp DESC;`;
     const values = [req.user.uid, req.user.uid];
 
     executeSql(sql, values, (success, results, fields) => {
