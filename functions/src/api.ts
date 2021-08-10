@@ -98,6 +98,7 @@ app.post("/makePayment", (req, res) => {
         });
 });
 
+// TODO figure out how to make a join on this to get the recicpient emails instead of uid
 app.get("/getPayments", (req, res) => {
     const sql = "SELECT * from Payment WHERE sender_id=? or recipient_id=? ORDER BY timestamp";
     const values = [req.user.uid, req.user.uid];
