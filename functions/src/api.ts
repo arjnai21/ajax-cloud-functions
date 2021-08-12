@@ -119,8 +119,11 @@ app.get("/getPayments", (req, res) => {
     const values = [req.user.uid, req.user.uid];
 
     executeSql(sql, values, (success, results, fields) => {
-        // console.assert(results.length == 1);
-        res.json({payments: results});
+        if (success) {
+            res.json({payments: results});
+        } else {
+            res.json({payments: [], error: "Error retrieving payments from server."});
+        }
     });
 });
 
