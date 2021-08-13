@@ -141,7 +141,6 @@ app.get("/getPlaidLinkToken", (req, res) => {
         }
     );
 
-
     plaidClient.createLinkToken({
         user: {
             client_user_id: req.user.uid,
