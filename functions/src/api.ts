@@ -141,17 +141,16 @@ app.get("/getPlaidLinkToken", (req, res) => {
         }
     );
 
-    const clientUserId = "Stripe test";
 
     plaidClient.createLinkToken({
         user: {
-            client_user_id: clientUserId,
+            client_user_id: req.user.uid,
         },
-        client_name: "My App",
+        client_name: "Ajax",
         products: ["auth"],
         country_codes: ["US"],
         language: "en",
-        webhook: "https://sample.webhook.com",
+        // webhook: "https://sample.webhook.com",
     }, function(error, linkTokenResponse) {
         // Pass the result to your client-side app to initialize Link
         res.json({ link_token: linkTokenResponse.link_token });
