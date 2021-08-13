@@ -7,12 +7,14 @@ import * as admin from "firebase-admin";
 import * as express from "express";
 import * as cookieParserLib from "cookie-parser";
 import * as corsLib from "cors";
+import * as plaid from "plaid";
 import { executeSql, makePaymentDb } from "./mysql";
 
 // admin.initializeApp();
 const cookieParser = cookieParserLib();
 const cors = corsLib({origin: true});
 const app = express();
+const config = functions.config();
 
 //  copied from https://github.com/firebase/functions-samples/blob/main/authorized-https-endpoint/functions/index.js
 // Express middleware that validates Firebase ID Tokens passed in the Authorization HTTP header.
@@ -124,6 +126,35 @@ app.get("/getPayments", (req, res) => {
         } else {
             res.json({payments: [], error: "Error retrieving payments from server."});
         }
+    });
+});
+
+app.get("/getPlaidLinkToken", (req, res) => {
+    const plaidClient = new plaid.Client(
+        {
+            clientID: config.plaid.client_id,
+            secret: config.plaid.secret_sandbox,
+            env: plaid.environments.sandbox,
+            options: {
+                version: "2020-09-14",
+            },
+        }
+    );
+
+    const clientUserId = "Stripe test";
+
+    plaidClient.createLinkToken({
+        user: {
+            client_user_id: clientUserId,
+        },
+        client_name: "My App",
+        products: ["auth"],
+        country_codes: ["US"],
+        language: "en",
+        webhook: "https://sample.webhook.com",
+    }, function(error, linkTokenResponse) {
+        // Pass the result to your client-side app to initialize Link
+        res.json({ link_token: linkTokenResponse.link_token });
     });
 });
 
