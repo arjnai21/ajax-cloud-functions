@@ -166,6 +166,25 @@ app.get("/getPlaidLinkToken", async (req, res) => {
     }
 });
 
+app.post("/exchangePublicToken", async (req, res) => {
+    const request = {
+        public_token: req.body.publicToken,
+    };
+
+    try {
+        const response = await plaidClient.itemPublicTokenExchange(request);
+        functions.logger.info("LINK TOKEN RESPONSE: " + response);
+        const accessToken = response.data.access_token;
+        // store accesstoken
+        res.json({success: true});
+    } catch (error) {
+        // handle error
+        functions.logger.error(error);
+        res.status(500);
+        res.json({success: false});
+    }
+});
+
 
 // This HTTPS endpoint can only be accessed by your Firebase Users.
 // Requests need to be authorized by providing an `Authorization` HTTP header
