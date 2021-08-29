@@ -176,7 +176,16 @@ app.post("/exchangePublicToken", async (req, res) => {
         functions.logger.info("LINK TOKEN RESPONSE: " + response);
         const accessToken = response.data.access_token;
         // store accesstoken
-        res.json({success: true});
+        const sql = "UPDATE User WHERE id=? SET plaid_access_token=?";
+        const values = [req.user.uid, accessToken];
+        executeSql(sql, values, (success, results, fields) => {
+            if (success) {
+                res.json({success: true});
+            } else {
+                res.status(500);
+                res.json({success: false});
+            }
+        });
     } catch (error) {
         // handle error
         functions.logger.error(error);
