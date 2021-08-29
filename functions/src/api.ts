@@ -7,7 +7,7 @@ import * as admin from "firebase-admin";
 import * as express from "express";
 import * as cookieParserLib from "cookie-parser";
 import * as corsLib from "cors";
-import * as plaid from "plaid";
+import {Configuration, CountryCode, PlaidApi, PlaidEnvironments, Products} from "plaid";
 import { executeSql, makePaymentDb } from "./mysql";
 
 // admin.initializeApp();
@@ -15,6 +15,17 @@ const cookieParser = cookieParserLib();
 const cors = corsLib({origin: true});
 const app = express();
 const config = functions.config();
+const plaidConfig = new Configuration({
+    basePath: PlaidEnvironments.sandbox,
+    baseOptions: {
+        headers: {
+            "PLAID-CLIENT-ID": config.plaid.client_id,
+            "PLAID-SECRET": config.plaid.secret_sandbox,
+        },
+    },
+});
+const plaidClient = new PlaidApi(plaidConfig);
+
 
 //  copied from https://github.com/firebase/functions-samples/blob/main/authorized-https-endpoint/functions/index.js
 // Express middleware that validates Firebase ID Tokens passed in the Authorization HTTP header.
@@ -129,32 +140,32 @@ app.get("/getPayments", (req, res) => {
     });
 });
 
-app.get("/getPlaidLinkToken", (req, res) => {
-    const plaidClient = new plaid.Client(
-        {
-            clientID: config.plaid.client_id,
-            secret: config.plaid.secret_sandbox,
-            env: plaid.environments.sandbox,
-            options: {
-                version: "2020-09-14",
-            },
-        }
-    );
 
-    plaidClient.createLinkToken({
+app.get("/getPlaidLinkToken", async (req, res) => {
+    const request = {
         user: {
             client_user_id: req.user.uid,
         },
         client_name: "Ajax",
-        products: ["auth"],
-        country_codes: ["US"],
+        products: [Products.Auth],
+        country_codes: [CountryCode.Us],
         language: "en",
         // webhook: "https://sample.webhook.com",
-    }, function(error, linkTokenResponse) {
-        // Pass the result to your client-side app to initialize Link
-        res.json({ link_token: linkTokenResponse.link_token });
-    });
+    };
+
+    try {
+        const response = await plaidClient.linkTokenCreate(request);
+        functions.logger.info("LINK TOKEN RESPONSE: " + response);
+        const linkToken = response.data.link_token;
+        res.json({success: true, link_token: linkToken});
+    } catch (error) {
+        // handle error
+        functions.logger.error(error);
+        res.status(500);
+        res.json({success: false});
+    }
 });
+
 
 // This HTTPS endpoint can only be accessed by your Firebase Users.
 // Requests need to be authorized by providing an `Authorization` HTTP header
